@@ -1,3 +1,4 @@
+import { ModeToggle } from "@/components/costome/theam";
 import { api } from "@/trpc/server";
 
 const Page = async () => {
@@ -7,6 +8,7 @@ const Page = async () => {
   
   return (
     <div>
+      <ModeToggle/>
       <p>{User.name}</p>
     </div>
   );
