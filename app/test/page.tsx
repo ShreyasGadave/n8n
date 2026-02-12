@@ -1,8 +1,11 @@
-'use client'
+import React from 'react'
 
-const Page = () => {
-  console.log('Shreyas client');
-  return <p>client side</p>;
+const page = () => {
+  return (
+    <div>
+      
+    </div>
+  )
 }
 
-export default Page;
+export default page

@@ -10,13 +10,13 @@ model User {
   id            Int       @id @default(autoincrement())
   email         String    @unique
   name          String?
-  posts         Post[]
   emailVerified Boolean   @default(false)
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  sessions      Session[]
   accounts      Account[]
+  posts         Post[]
+  sessions      Session[]
 
   @@map("user")
 }
@@ -28,20 +28,21 @@ model Post {
   published Boolean @default(false)
   authorId  Int
   author    User    @relation(fields: [authorId], references: [id])
+
+  @@map("post")
 }
 
 model Session {
   id        String   @id
   expiresAt DateTime
-  token     String
+  token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   ipAddress String?
   userAgent String?
-  userId    Int // ✅ FIXED (was String)
+  userId    Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@map("session")
 }
 
@@ -49,8 +50,7 @@ model Account {
   id                    String    @id
   accountId             String
   providerId            String
-  userId                Int // ✅ FIXED (was String)
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                Int
   accessToken           String?
   refreshToken          String?
   idToken               String?
@@ -60,6 +60,7 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("account")
 }
@@ -76,6 +77,8 @@ model Verification {
 }
 
 model Workflow {
-  id   String  @id @default(cuid())
+  id   String @id @default(cuid())
   name String
+
+  @@map("workflow")
 }
