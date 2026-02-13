@@ -1,14 +1,14 @@
 import { email, z } from 'zod';
-import { ProcedureBase, createTRPCRouter } from "../init";
+import { BaseProcedure, createTRPCRouter } from "../init";
 import { prisma } from '@/lib/prisma';
 import { TRPCError } from '@trpc/server';
-// import { AuthRouter } from './Auth';
+import { AuthRouter } from './Auth';
 export const appRouter = createTRPCRouter({
-  getWorkflows: ProcedureBase.query(({ ctx }) => {
+  getWorkflows: BaseProcedure.query(({ ctx }) => {
   return prisma.workflow.findMany();
 }),
 
-createWorkflow: ProcedureBase.mutation(() => {
+createWorkflow: BaseProcedure.mutation(() => {
   return prisma.workflow.create({
     data: {
       name: "test-workflow",
@@ -16,7 +16,7 @@ createWorkflow: ProcedureBase.mutation(() => {
   });
 }),
 
-getUserData: ProcedureBase.query(async () => {
+getUserData: BaseProcedure.query(async () => {
   try {
     const users = await prisma.user.findMany();
     return users;
@@ -29,7 +29,7 @@ getUserData: ProcedureBase.query(async () => {
     });
   }
 }),
-// auth:AuthRouter
+auth:AuthRouter
 });
 // export type definition of API
 export type AppRouter = typeof appRouter;

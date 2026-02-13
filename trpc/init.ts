@@ -1,17 +1,40 @@
-import { initTRPC } from "@trpc/server";
-import { cache } from "react";
-import superjson from "superjson";
+import { initTRPC, TRPCError } from "@trpc/server";
+import { NextRequest } from "next/server";
+import jwt from "jsonwebtoken";
+import SuperJSON from "superjson"; // ✅ Add this import
 
-export const createTRPCContext = cache(async () => {
-  return {
-    // auth : ...
-  };
-});
+export const createTRPCContext = async (opts: { req: NextRequest }) => {
+  const token = opts.req.cookies.get("auth-token")?.value;
 
-const t = initTRPC.create({
-  transformer: superjson,
+  let user = null;
+  if (token) {
+    try {
+      user = jwt.verify(token, process.env.JWT_SECRET!) as {
+        userId: string;
+      };
+    } catch {
+      user = null;
+    }
+  }
+
+  return { user, req: opts.req };
+};
+
+const t = initTRPC.context<typeof createTRPCContext>().create({
+  transformer: SuperJSON, // ✅ Add this — must match the client
 });
 
 export const createTRPCRouter = t.router;
-export const createCallerFactory = t.createCallerFactory;
-export const ProcedureBase = t.procedure;
+export const BaseProcedure = t.procedure;
+
+const isAuthed = t.middleware(({ ctx, next }) => {
+  if (!ctx.user) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "You must be logged in.",
+    });
+  }
+  return next({ ctx: { user: ctx.user } });
+});
+
+export const ProtectedProcedure = t.procedure.use(isAuthed);
