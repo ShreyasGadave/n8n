@@ -1,19 +1,18 @@
 import z from "zod";
-import { baseProcedure, createTRPCRouter } from "../init";
+import { BaseProcedure, ProtectedProcedure, createTRPCRouter } from "../init";
 import { prisma } from "@/db/client";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/app/generated/prisma";
 import { TRPCError } from "@trpc/server";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { cookies } from "next/headers"; // ✅ import Next.js cookie handler
 
 export const AuthRouter = createTRPCRouter({
-  signup: baseProcedure
+  signup: BaseProcedure
     .input(
       z.object({
-        name: z.string(),
-        email: z.string(),
-        mobile: z.string(),
-        password: z.string(),
+        email: z.string().email(),
+        password: z.string().min(6),
       }),
     )
     .mutation(async ({ input }) => {
@@ -23,21 +22,18 @@ export const AuthRouter = createTRPCRouter({
 
         await prisma.user.create({
           data: {
-            name: input.name,
             email: input.email,
-            mobile: input.mobile,
             password: passwordHash,
           },
         });
 
         return {
           success: true,
-          message: `User created successfully. Password :${passwordHash}`,
+          message: "User created successfully.",
+          // ❌ Removed: never return the hash to the client
         };
       } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
+        if (error instanceof TRPCError) throw error;
 
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
           if (error.code === "P2002") {
@@ -48,8 +44,6 @@ export const AuthRouter = createTRPCRouter({
           }
         }
 
-        console.error("Database error:", error);
-
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create user. Please try again.",
@@ -57,10 +51,10 @@ export const AuthRouter = createTRPCRouter({
       }
     }),
 
-  login: baseProcedure
+  login: BaseProcedure
     .input(
       z.object({
-        email: z.string(),
+        email: z.string().email(),
         password: z.string(),
       }),
     )
@@ -76,13 +70,7 @@ export const AuthRouter = createTRPCRouter({
         });
       }
 
-      console.log("User from DB:", user);
-      console.log("Input password:", input.password);
-      console.log("Stored hash:", user.password);
-
       const isValid = await bcrypt.compare(input.password, user.password);
-
-      console.log("Password valid:", isValid);
 
       if (!isValid) {
         throw new TRPCError({
@@ -91,19 +79,43 @@ export const AuthRouter = createTRPCRouter({
         });
       }
 
-      const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, {
-        expiresIn: "7d",
+      const token = jwt.sign(
+        { userId: user.id },
+        process.env.JWT_SECRET!,
+        { expiresIn: "7d" }
+      );
+
+      // ✅ Set httpOnly cookie — JS can't read this (XSS safe)
+      const cookieStore = await cookies();
+      cookieStore.set("auth-token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: "/",
       });
 
+      // ✅ Only return safe user info, never the token in the body
       return {
         success: true,
-        token,
         user: {
           id: user.id,
           name: user.name,
           email: user.email,
         },
-        message: `User Authorized successfully`,
+        message: "User authorized successfully",
       };
     }),
+
+  // ✅ New: verify who's logged in
+  me: ProtectedProcedure.query(({ ctx }) => {
+    return { userId: ctx.user.userId };
+  }),
+
+  // ✅ New: logout by clearing the cookie
+  logout: ProtectedProcedure.mutation(async () => {
+    const cookieStore = await cookies();
+    cookieStore.delete("auth-token");
+    return { success: true, message: "Logged out successfully" };
+  }),
 });
