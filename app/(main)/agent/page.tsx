@@ -9,6 +9,9 @@ const Page = () => {
     onSuccess: async () => {
       toast.success("AI Job Queued");
     },
+    onError:()=>{
+      toast.error("Something went Wrong")
+    }
   });
 
   const createWorkflow = trpc.workflow.createWorkflow.useMutation({
