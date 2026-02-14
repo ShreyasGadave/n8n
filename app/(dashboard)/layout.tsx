@@ -1,7 +1,15 @@
-const Layout=()=>{
-    return (
-        <div></div>
-    )
-}
+import { AppSidebar } from "@/components/costome/app-sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
-export default Layout
+const Layout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <SidebarProvider>
+         <AppSidebar/>
+    <SidebarInset className="bg-accent/20 ">
+        {children}
+    </SidebarInset> 
+    </SidebarProvider>
+  )
+};
+
+export default Layout;

@@ -6,7 +6,7 @@ import { verifyToken } from "@/lib/jwt";
 const AUTH_ROUTES = ["/signin", "/signup"];
 
 // Protected routes — redirect to /signin if not logged in
-const PROTECTED_ROUTES = ["/agent"];
+const PROTECTED_ROUTES = ["/agent", "/executions"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
