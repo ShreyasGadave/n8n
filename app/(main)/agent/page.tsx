@@ -1,4 +1,5 @@
 "use client";
+import { AuthForm } from "@/components/costome/auth-form";
 import { trpc } from "@/trpc/react";
 import { toast } from "sonner";
 
@@ -24,7 +25,9 @@ const Page = () => {
   const { data } = trpc.workflow.getWorkflows.useQuery();
 
   return (
-    <div>
+    <> 
+    <AuthForm/>
+    {/* <div>
       <button
         onClick={() => createWorkflow.mutate()}
         disabled={createWorkflow.isPending}
@@ -40,7 +43,8 @@ const Page = () => {
         Test Gemini
       </button>
       <div>{JSON.stringify(data, null, 2)}</div>
-    </div>
+    </div> */}
+    </>
   );
 };
 

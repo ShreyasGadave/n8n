@@ -1,15 +1,15 @@
-import { BaseProcedure, createTRPCRouter } from "../init";
+import { createTRPCRouter, ProtectedProcedure } from "../init";
 import { prisma } from "@/lib/prisma";
 import { TRPCError } from "@trpc/server";
-import { AuthRouter } from "./Auth";
-import { WorkFlowRouter } from "./workflow";
+// import { AuthRouter } from "./Auth";
 export const appRouter = createTRPCRouter({
-
-
-  getUserData: BaseProcedure.query(async () => {
+  getUserData: ProtectedProcedure.query(({ ctx }) => {
     try {
-      const users = await prisma.user.findMany();
-      return users;
+      return prisma.user.findMany({
+        where: {
+          id: ctx.auth.user.id,
+        },
+      });
     } catch (error) {
       console.error("Error fetching users:", error);
 
@@ -19,8 +19,8 @@ export const appRouter = createTRPCRouter({
       });
     }
   }),
-  auth: AuthRouter,
-  workflow:WorkFlowRouter
+  // auth: AuthRouter,
+  // workflow: WorkFlowRouter,
 });
 // export type definition of API
 export type AppRouter = typeof appRouter;
