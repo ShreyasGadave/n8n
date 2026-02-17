@@ -1,6 +1,7 @@
 'use client'
 
 import { ModeToggle } from "@/components/costome/button-theam";
+import { authClient } from "@/lib/auth-client";
 
 const Page = () => {
 console.log('Shreyas');
@@ -9,7 +10,8 @@ console.log('Shreyas');
   return (
     <div className="min-h-screen min-w-screen flex items-center justify-center flex-col gap-y-6">
       protected server component
-      <ModeToggle/>
+      <ModeToggle/> 
+  
     </div>
   );
 };

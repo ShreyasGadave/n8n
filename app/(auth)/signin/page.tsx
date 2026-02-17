@@ -1,9 +1,11 @@
+import { AuthForm } from "@/components/costome/auth-form";
 import Index from "@/components/ui/travel-connect-signin-1";
+import { requireUnAuth } from "@/lib/auth-utils";
 
-const page = () => {
+const page = async () => { 
   return (
     <div>
-         <Index />
+         <AuthForm />
     </div>
   );
 };
